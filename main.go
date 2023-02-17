@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"log"
 	"net"
 	"net/http"
@@ -8,19 +9,25 @@ import (
 )
 
 type Item struct {
-	id int
-	title string
-	body string
+	ID int
+	Title string
+	Body string
 }
 
 type API int
 
 var database []Item
 
-func getById(id int) (index int, item Item) {
+func (api *API) printDB(cmd string) error {
+	fmt.Println("Database after", cmd)
+	fmt.Println(database)
+	return nil
+}
+
+func getById(id int) (index int, item []Item) {
 	for currentIndex, value := range database {
-		if value.id == id {
-			item = value
+		if value.ID == id {
+			item = append(item, value)
 			index = currentIndex
 			break
 		}
@@ -28,29 +35,29 @@ func getById(id int) (index int, item Item) {
 	return
 }
 
-func (api *API) GetItemById(id int, reply *Item) error {
+func (api *API) GetItemById(id int, reply *[]Item) error {
 	_, *reply = getById(id)
-	return nil
+	return api.printDB("GetItemById")
 }
 
 func (api *API) AddItems(item []Item, reply *[]Item) error {
 	database = append(database, item...)
 	*reply = item
-	return nil
+	return api.printDB("AddItems")
 }
 
-func (api *API) EditItem(edit Item, reply *Item) error {
-	index, _ := getById(edit.id)
+func (api *API) EditItem(edit Item, reply *[]Item) error {
+	index, _ := getById(edit.ID)
 	database[index] = edit
-	*reply = edit
-	return nil
+	*reply = append(*reply, edit)
+	return api.printDB("EditItem")
 }
 
-func DeleteItem(id int, reply *Item) error {
+func (api *API) DeleteItem(id int, reply *[]Item) error {
 	var index int
 	index, *reply = getById(id)
 	database = append(database[:index], database[index+1:]...)
-	return nil
+	return api.printDB("DeleteItem")
 }
 
 func main() {
